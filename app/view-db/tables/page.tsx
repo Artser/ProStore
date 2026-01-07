@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
@@ -12,7 +12,7 @@ interface Table {
   available: boolean
 }
 
-export default function TablesPage() {
+function TablesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const dbType = searchParams.get('db') || 'local'
@@ -195,6 +195,25 @@ export default function TablesPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function TablesPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{ color: 'white', fontSize: '1.2rem' }}>Загрузка...</div>
+      </div>
+    }>
+      <TablesContent />
+    </Suspense>
   )
 }
 

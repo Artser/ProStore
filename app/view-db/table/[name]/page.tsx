@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 
 interface Pagination {
@@ -10,7 +10,7 @@ interface Pagination {
   totalPages: number
 }
 
-export default function TableViewPage() {
+function TableViewContent() {
   const router = useRouter()
   const params = useParams()
   const searchParams = useSearchParams()
@@ -531,6 +531,25 @@ export default function TableViewPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function TableViewPage() {
+  return (
+    <Suspense fallback={
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '2rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}>
+        <div style={{ color: 'white', fontSize: '1.2rem' }}>Загрузка...</div>
+      </div>
+    }>
+      <TableViewContent />
+    </Suspense>
   )
 }
 
