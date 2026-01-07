@@ -10,11 +10,100 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  notes Note[]
+  films Film[]
+  votes Vote[]
+
+  @@map("users")
+}
+
 model Note {
   id        String   @id @default(uuid())
+  ownerId   String
   title     String
   createdAt DateTime @default(now())
 
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
   @@map("notes")
 }
 
+model Category {
+  id       String @id @default(cuid())
+  category String @unique
+
+  films Film[]
+
+  @@map("categories")
+}
+
+model Film {
+  id          String      @id @default(cuid())
+  ownerId     String
+  title       String
+  content     String
+  description String?
+  categoryId  String
+  visibility  Visibility  @default(PRIVATE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  publishedAt DateTime?
+
+  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  votes    Vote[]
+  tags     FilmTag[]
+
+  @@index([ownerId, updatedAt])
+  @@index([visibility, createdAt])
+  @@map("films")
+}
+
+model Tag {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+
+  films FilmTag[]
+
+  @@map("tags")
+}
+
+model FilmTag {
+  filmId String
+  tagId  String
+
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([filmId, tagId])
+  @@map("film_tags")
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  userId    String
+  promptId  String
+  value     Int      @default(1)
+  createdAt DateTime @default(now())
+
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt Film @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, promptId])
+  @@index([promptId])
+  @@index([userId])
+  @@map("votes")
+}
+
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
