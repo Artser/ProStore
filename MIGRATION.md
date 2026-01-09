@@ -50,3 +50,4 @@ npx prisma migrate dev --name название_миграции
 - Индексы на Vote: `[promptId]`, `[userId]`
 - Все связи с `onDelete: Cascade`
 
+
