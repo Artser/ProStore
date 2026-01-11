@@ -1,18 +1,13 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { FilmCard } from '@/components/dashboard/film-card'
-import { FilmDialog } from '@/components/dashboard/film-dialog'
-import { SearchInput } from '@/components/dashboard/search-input'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { FilmsListWrapper } from '@/components/dashboard/films-list-wrapper'
 
 /**
- * Страница "Мои фильмы"
- * Показывает все фильмы текущего пользователя
+ * Страница "Избранное"
+ * Показывает избранные фильмы текущего пользователя
  */
-export default async function DashboardPage({
+export default async function FavoritesPage({
   searchParams,
 }: {
   searchParams: { search?: string; page?: string }
@@ -45,11 +40,12 @@ export default async function DashboardPage({
       }
     : {}
 
-  // Получение фильмов пользователя
+  // Получение избранных фильмов пользователя
   const [films, total] = await Promise.all([
     prisma.film.findMany({
       where: {
         ownerId: userId,
+        isFavorite: true,
         ...searchFilter,
       },
       include: {
@@ -69,6 +65,7 @@ export default async function DashboardPage({
     prisma.film.count({
       where: {
         ownerId: userId,
+        isFavorite: true,
         ...searchFilter,
       },
     }),
@@ -78,17 +75,15 @@ export default async function DashboardPage({
 
   return (
     <div className="p-8">
-      {/* Заголовок */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Личный кабинет
+          Избранное
         </h1>
-        <h2 className="text-xl font-semibold text-gray-700 mb-6">
-          Мои фильмы
-        </h2>
+        <p className="text-gray-600">
+          Ваши избранные промты
+        </p>
       </div>
 
-      {/* Список фильмов */}
       <FilmsListWrapper
         films={films}
         currentUserId={userId}
@@ -100,3 +95,4 @@ export default async function DashboardPage({
     </div>
   )
 }
+

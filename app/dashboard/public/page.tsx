@@ -1,18 +1,13 @@
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { FilmCard } from '@/components/dashboard/film-card'
-import { FilmDialog } from '@/components/dashboard/film-dialog'
-import { SearchInput } from '@/components/dashboard/search-input'
-import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
 import { FilmsListWrapper } from '@/components/dashboard/films-list-wrapper'
 
 /**
- * Страница "Мои фильмы"
- * Показывает все фильмы текущего пользователя
+ * Страница "Публичные промты"
+ * Показывает все публичные промты всех пользователей
  */
-export default async function DashboardPage({
+export default async function PublicFilmsPage({
   searchParams,
 }: {
   searchParams: { search?: string; page?: string }
@@ -45,11 +40,11 @@ export default async function DashboardPage({
       }
     : {}
 
-  // Получение фильмов пользователя
+  // Получение публичных фильмов
   const [films, total] = await Promise.all([
     prisma.film.findMany({
       where: {
-        ownerId: userId,
+        isPublic: true,
         ...searchFilter,
       },
       include: {
@@ -61,14 +56,14 @@ export default async function DashboardPage({
         },
       },
       orderBy: {
-        updatedAt: 'desc',
+        createdAt: 'desc',
       },
       skip,
       take: pageSize,
     }),
     prisma.film.count({
       where: {
-        ownerId: userId,
+        isPublic: true,
         ...searchFilter,
       },
     }),
@@ -78,17 +73,15 @@ export default async function DashboardPage({
 
   return (
     <div className="p-8">
-      {/* Заголовок */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Личный кабинет
+          Публичные промты
         </h1>
-        <h2 className="text-xl font-semibold text-gray-700 mb-6">
-          Мои фильмы
-        </h2>
+        <p className="text-gray-600">
+          Все опубликованные промты от пользователей сообщества
+        </p>
       </div>
 
-      {/* Список фильмов */}
       <FilmsListWrapper
         films={films}
         currentUserId={userId}
@@ -100,3 +93,4 @@ export default async function DashboardPage({
     </div>
   )
 }
+

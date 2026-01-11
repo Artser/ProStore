@@ -51,3 +51,4 @@ npx prisma migrate dev --name название_миграции
 - Все связи с `onDelete: Cascade`
 
 
+

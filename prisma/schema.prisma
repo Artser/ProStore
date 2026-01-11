@@ -11,11 +11,12 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  image     String?
-  createdAt DateTime @default(now())
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
 
   notes Note[]
   films Film[]
@@ -95,6 +96,8 @@ model Film {
   description String?
   categoryId  String
   visibility  Visibility  @default(PRIVATE)
+  isPublic    Boolean     @default(false)  // Публичность (дополнительно к visibility для простоты)
+  isFavorite  Boolean     @default(false)  // Избранное
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
   publishedAt DateTime?
@@ -106,6 +109,8 @@ model Film {
 
   @@index([ownerId, updatedAt])
   @@index([visibility, createdAt])
+  @@index([isPublic, createdAt])
+  @@index([ownerId, isFavorite])
   @@map("films")
 }
 
