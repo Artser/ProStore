@@ -20,7 +20,7 @@ interface SidebarItem {
 const sidebarItems: SidebarItem[] = [
   { href: '/dashboard', label: 'Фильмы', icon: <FilmIcon className="h-5 w-5" /> },
   { href: '/dashboard/favorites', label: 'Избранное', icon: <Star className="h-5 w-5" /> },
-  { href: '/dashboard/public', label: 'Публичные промты', icon: <MessageSquare className="h-5 w-5" /> },
+  { href: '/dashboard/public', label: 'Публичные фильмы', icon: <MessageSquare className="h-5 w-5" /> },
   { href: '/dashboard/history', label: 'История', icon: <History className="h-5 w-5" /> },
   { href: '/dashboard/settings', label: 'Настройки', icon: <Settings className="h-5 w-5" /> },
 ]

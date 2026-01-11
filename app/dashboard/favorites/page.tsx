@@ -80,7 +80,7 @@ export default async function FavoritesPage({
           Избранное
         </h1>
         <p className="text-gray-600">
-          Ваши избранные промты
+          Ваши избранные фильмы
         </p>
       </div>
 

@@ -4,8 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { FilmsListWrapper } from '@/components/dashboard/films-list-wrapper'
 
 /**
- * Страница "Публичные промты"
- * Показывает все публичные промты всех пользователей
+ * Страница "Публичные фильмы"
+ * Показывает все публичные фильмы всех пользователей
  */
 export default async function PublicFilmsPage({
   searchParams,
@@ -75,10 +75,10 @@ export default async function PublicFilmsPage({
     <div className="p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">
-          Публичные промты
+          Публичные фильмы
         </h1>
         <p className="text-gray-600">
-          Все опубликованные промты от пользователей сообщества
+          Все опубликованные фильмы от пользователей сообщества
         </p>
       </div>
 

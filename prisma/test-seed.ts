@@ -27,21 +27,21 @@ async function main() {
     })
     console.log(`✅ Категория создана/найдена: ${category.category} (ID: ${category.id})`)
 
-    // Создаем тестовый промт
+    // Создаем тестовый фильм
     const film = await prisma.film.create({
       data: {
-        title: 'Тестовый промт для проверки',
-        content: 'Это содержимое тестового промта. Система работает корректно!',
-        description: 'Описание тестового промта',
+        title: 'Тестовый фильм для проверки',
+        content: 'Это содержимое тестового фильма. Система работает корректно!',
+        description: 'Описание тестового фильма',
         ownerId: user.id,
         categoryId: category.id,
         visibility: Visibility.PUBLIC,
         publishedAt: new Date(),
       },
     })
-    console.log(`✅ Промт создан: "${film.title}" (ID: ${film.id})`)
+    console.log(`✅ Фильм создан: "${film.title}" (ID: ${film.id})`)
 
-    // Создаем голос за промт
+    // Создаем голос за фильм
     const vote = await prisma.vote.upsert({
       where: {
         userId_promptId: {
@@ -75,8 +75,8 @@ async function main() {
     })
 
     console.log('\n📊 Проверка связей:')
-    console.log(`   Промт принадлежит пользователю: ${filmWithRelations?.owner.email}`)
-    console.log(`   Категория промта: ${filmWithRelations?.category.category}`)
+    console.log(`   Фильм принадлежит пользователю: ${filmWithRelations?.owner.email}`)
+    console.log(`   Категория фильма: ${filmWithRelations?.category.category}`)
     console.log(`   Количество голосов: ${filmWithRelations?.votes.length}`)
     if (filmWithRelations?.votes.length) {
       console.log(`   Голос от: ${filmWithRelations.votes[0].user.email}`)
@@ -85,7 +85,7 @@ async function main() {
     console.log('\n✅ Тестовый скрипт выполнен успешно!')
     console.log('\n📝 Созданные данные:')
     console.log(`   - Пользователь: ${user.email}`)
-    console.log(`   - Промт: "${film.title}"`)
+    console.log(`   - Фильм: "${film.title}"`)
     console.log(`   - Голос: значение ${vote.value}`)
   } catch (error) {
     console.error('❌ Ошибка при выполнении тестового скрипта:', error)

@@ -98,12 +98,12 @@ export function FilmDialog({ open, onOpenChange, film }: FilmDialogProps) {
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {film ? 'Редактировать промт' : 'Новый промт'}
+            {film ? 'Редактировать фильм' : 'Новый фильм'}
           </DialogTitle>
           <DialogDescription>
             {film
-              ? 'Измените информацию о промте'
-              : 'Создайте новый промт для вашей коллекции'}
+              ? 'Измените информацию о фильме'
+              : 'Создайте новый фильм для вашей коллекции'}
           </DialogDescription>
         </DialogHeader>
 
@@ -114,7 +114,7 @@ export function FilmDialog({ open, onOpenChange, film }: FilmDialogProps) {
             <Input
               id="title"
               {...register('title')}
-              placeholder="Введите название промта"
+              placeholder="Введите название фильма"
               className={errors.title ? 'border-destructive' : ''}
             />
             {errors.title && (
@@ -145,7 +145,7 @@ export function FilmDialog({ open, onOpenChange, film }: FilmDialogProps) {
             <Textarea
               id="content"
               {...register('content')}
-              placeholder="Введите содержимое промта"
+              placeholder="Введите содержимое фильма"
               rows={8}
               className={errors.content ? 'border-destructive' : ''}
             />
@@ -159,7 +159,7 @@ export function FilmDialog({ open, onOpenChange, film }: FilmDialogProps) {
           {/* Публичность */}
           <div className="flex items-center justify-between space-x-2 rounded-md border p-4">
             <div className="space-y-0.5">
-              <Label htmlFor="isPublic">Публичный промт</Label>
+              <Label htmlFor="isPublic">Публичный фильм</Label>
               <p className="text-sm text-muted-foreground">
                 Виден всем пользователям
               </p>

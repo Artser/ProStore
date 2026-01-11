@@ -60,7 +60,7 @@ export function FilmCard({ film, currentUserId, onEdit }: FilmCardProps) {
   }
 
   const handleDelete = async () => {
-    if (!isOwner || !confirm('Вы уверены, что хотите удалить этот промт?')) {
+    if (!isOwner || !confirm('Вы уверены, что хотите удалить этот фильм?')) {
       return
     }
     setIsDeleting(true)

@@ -90,7 +90,7 @@ export function FilmsList({
         </div>
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
-          Новый промт
+          Новый фильм
         </Button>
       </div>
 
@@ -105,7 +105,7 @@ export function FilmsList({
           {!searchQuery && (
             <Button onClick={handleCreate}>
               <Plus className="h-4 w-4 mr-2" />
-              Создать промт
+              Создать фильм
             </Button>
           )}
         </div>

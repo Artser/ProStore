@@ -31,19 +31,19 @@ async function main() {
   })
   console.log(`Создана категория: ${category.category}`)
 
-  // Создаем тестовый промт (Film)
+  // Создаем тестовый фильм (Film)
   const film = await prisma.film.create({
     data: {
-      title: 'Тестовый промт',
-      content: 'Это содержимое тестового промта для проверки работы системы.',
-      description: 'Описание тестового промта',
+      title: 'Тестовый фильм',
+      content: 'Это содержимое тестового фильма для проверки работы системы.',
+      description: 'Описание тестового фильма',
       ownerId: user.id,
       categoryId: category.id,
       visibility: Visibility.PUBLIC,
       publishedAt: new Date(),
     },
   })
-  console.log(`Создан промт: ${film.title}`)
+  console.log(`Создан фильм: ${film.title}`)
 
   // Создаем тег
   const tag = await prisma.tag.create({
@@ -53,16 +53,16 @@ async function main() {
   })
   console.log(`Создан тег: ${tag.name}`)
 
-  // Связываем промт с тегом
+  // Связываем фильм с тегом
   await prisma.filmTag.create({
     data: {
       filmId: film.id,
       tagId: tag.id,
     },
   })
-  console.log('Промт связан с тегом')
+  console.log('Фильм связан с тегом')
 
-  // Создаем голос (Vote) от пользователя за промт
+  // Создаем голос (Vote) от пользователя за фильм
   const vote = await prisma.vote.create({
     data: {
       userId: user.id,
@@ -84,7 +84,7 @@ async function main() {
   console.log('\n✅ Seeding завершен успешно!')
   console.log(`\nСоздано:`)
   console.log(`- Пользователей: 1`)
-  console.log(`- Промтов: 1`)
+  console.log(`- Фильмов: 1`)
   console.log(`- Голосов: 1`)
   console.log(`- Заметок: 1`)
   console.log(`- Категорий: 1`)

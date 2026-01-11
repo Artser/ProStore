@@ -4,8 +4,8 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 
 /**
- * Защищённая страница "Мои промты"
- * Показывает только промты текущего пользователя
+ * Защищённая страница "Мои фильмы"
+ * Показывает только фильмы текущего пользователя
  */
 export default async function MyPromptsPage() {
   const session = await auth()
@@ -17,7 +17,7 @@ export default async function MyPromptsPage() {
 
   const userId = session.user.id
 
-  // Получаем промты только текущего пользователя
+  // Получаем фильмы только текущего пользователя
   const myFilms = await prisma.film.findMany({
     where: {
       ownerId: userId, // Фильтр по владельцу
@@ -64,7 +64,7 @@ export default async function MyPromptsPage() {
             marginBottom: '2rem',
           }}
         >
-          <h1 style={{ fontSize: '2rem', color: '#333' }}>Мои промты</h1>
+          <h1 style={{ fontSize: '2rem', color: '#333' }}>Мои фильмы</h1>
           <Link
             href="/dashboard"
             style={{
@@ -79,7 +79,7 @@ export default async function MyPromptsPage() {
           </Link>
         </div>
 
-        {/* Список промтов */}
+        {/* Список фильмов */}
         {myFilms.length === 0 ? (
           <div
             style={{
@@ -88,9 +88,9 @@ export default async function MyPromptsPage() {
               color: '#999',
             }}
           >
-            <p>У вас пока нет промтов</p>
+            <p>У вас пока нет фильмов</p>
             <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-              Создайте свой первый промт!
+              Создайте свой первый фильм!
             </p>
           </div>
         ) : (
