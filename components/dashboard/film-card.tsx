@@ -156,11 +156,11 @@ export function FilmCard({ film, currentUserId, onEdit }: FilmCardProps) {
           )}
 
           {/* Иконка публичности для всех */}
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0" title={film.isPublic ? "Публичный" : "Приватный"}>
             {film.isPublic ? (
-              <Globe className="h-4 w-4 text-green-500" title="Публичный" />
+              <Globe className="h-4 w-4 text-green-500" />
             ) : (
-              <Lock className="h-4 w-4 text-gray-400" title="Приватный" />
+              <Lock className="h-4 w-4 text-gray-400" />
             )}
           </div>
         </div>
