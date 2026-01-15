@@ -18,9 +18,10 @@ model User {
   image         String?
   createdAt     DateTime  @default(now())
 
-  notes Note[]
-  films Film[]
-  votes Vote[]
+  notes    Note[]
+  films    Film[]
+  votes    Vote[]
+  likes    Like[]
   accounts Account[]
   sessions Session[]
 
@@ -89,22 +90,23 @@ model Category {
 }
 
 model Film {
-  id          String      @id @default(cuid())
+  id          String     @id @default(cuid())
   ownerId     String
   title       String
   content     String
   description String?
   categoryId  String
-  visibility  Visibility  @default(PRIVATE)
-  isPublic    Boolean     @default(false)  // Публичность (дополнительно к visibility для простоты)
-  isFavorite  Boolean     @default(false)  // Избранное
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  visibility  Visibility @default(PRIVATE)
+  isPublic    Boolean    @default(false) // Публичность (дополнительно к visibility для простоты)
+  isFavorite  Boolean    @default(false) // Избранное
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
   publishedAt DateTime?
 
   owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   votes    Vote[]
+  likes    Like[]
   tags     FilmTag[]
 
   @@index([ownerId, updatedAt])
@@ -115,9 +117,9 @@ model Film {
 }
 
 model Tag {
-  id        String    @id @default(cuid())
-  name      String    @unique
-  createdAt DateTime  @default(now())
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
 
   films FilmTag[]
 
@@ -149,6 +151,21 @@ model Vote {
   @@index([promptId])
   @@index([userId])
   @@map("votes")
+}
+
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  filmId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, filmId])
+  @@index([filmId])
+  @@index([userId])
+  @@map("likes")
 }
 
 enum Visibility {

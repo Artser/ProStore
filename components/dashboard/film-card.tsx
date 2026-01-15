@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { togglePublic, toggleFavorite, deleteFilm } from '@/app/actions/film-actions'
 import { useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
+import { LikeButton } from './like-button'
 
 interface FilmCardProps {
   film: {
@@ -22,6 +23,8 @@ interface FilmCardProps {
     isPublic: boolean
     isFavorite: boolean
     createdAt: Date
+    likesCount?: number
+    likedByMe?: boolean
     owner: {
       id: string
       name?: string | null
@@ -29,13 +32,14 @@ interface FilmCardProps {
   }
   currentUserId: string
   onEdit?: (id: string) => void
+  showLikeButton?: boolean // Показывать ли кнопку лайка (только для публичных фильмов)
 }
 
 /**
  * Карточка фильма для списка
  * Отображает информацию о фильме и действия
  */
-export function FilmCard({ film, currentUserId, onEdit }: FilmCardProps) {
+export function FilmCard({ film, currentUserId, onEdit, showLikeButton = false }: FilmCardProps) {
   const [isDeleting, setIsDeleting] = useState(false)
   const router = useRouter()
   const isOwner = film.owner.id === currentUserId
@@ -93,6 +97,15 @@ export function FilmCard({ film, currentUserId, onEdit }: FilmCardProps) {
 
         {/* Действия */}
         <div className="flex-shrink-0 flex items-center gap-2">
+          {/* Кнопка лайка - только для публичных фильмов */}
+          {showLikeButton && film.isPublic && (
+            <LikeButton
+              filmId={film.id}
+              initialLiked={film.likedByMe || false}
+              initialCount={film.likesCount || 0}
+            />
+          )}
+
           {/* Звезда (избранное) - только для владельца */}
           {isOwner && (
             <button

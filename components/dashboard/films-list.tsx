@@ -5,7 +5,7 @@ import { FilmCard } from './film-card'
 import { FilmDialog } from './film-dialog'
 import { SearchInput } from './search-input'
 import { Button } from '@/components/ui/button'
-import { Plus, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, ChevronLeft, ChevronRight, TrendingUp, Clock } from 'lucide-react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 
 interface Film {
@@ -16,6 +16,8 @@ interface Film {
   isPublic: boolean
   isFavorite: boolean
   createdAt: Date
+  likesCount?: number
+  likedByMe?: boolean
   owner: {
     id: string
     name?: string | null
@@ -29,6 +31,7 @@ interface FilmsListProps {
   page?: number
   totalPages?: number
   total?: number
+  sort?: 'popular' | 'recent'
 }
 
 /**
@@ -41,6 +44,7 @@ export function FilmsList({
   page = 1,
   totalPages = 1,
   total = 0,
+  sort = 'recent',
 }: FilmsListProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -78,20 +82,52 @@ export function FilmsList({
     router.push(`${pathname}?${params.toString()}`)
   }
 
+  const handleSortChange = (newSort: 'popular' | 'recent') => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set('sort', newSort)
+    params.set('page', '1') // Сброс страницы при смене сортировки
+    router.push(`${pathname}?${params.toString()}`)
+  }
+
   return (
     <>
-      {/* Поиск и кнопка создания */}
-      <div className="flex items-center gap-4 mb-6">
-        <div className="flex-1 max-w-md">
-          <SearchInput
-            onSearch={handleSearch}
-            placeholder="Поиск по названию или содержимому..."
-          />
+      {/* Поиск, сортировка и кнопка создания */}
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex items-center gap-4">
+          <div className="flex-1 max-w-md">
+            <SearchInput
+              onSearch={handleSearch}
+              placeholder="Поиск по названию или содержимому..."
+            />
+          </div>
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Новый фильм
+          </Button>
         </div>
-        <Button onClick={handleCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          Новый фильм
-        </Button>
+        
+        {/* Переключатель сортировки (только для публичных фильмов) */}
+        {pathname?.includes('/public') && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Сортировка:</span>
+            <Button
+              variant={sort === 'popular' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleSortChange('popular')}
+            >
+              <TrendingUp className="h-4 w-4 mr-2" />
+              По популярности
+            </Button>
+            <Button
+              variant={sort === 'recent' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => handleSortChange('recent')}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              По дате
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Пустое состояние */}
@@ -119,6 +155,7 @@ export function FilmsList({
                 film={film}
                 currentUserId={currentUserId}
                 onEdit={handleEdit}
+                showLikeButton={pathname?.includes('/public')}
               />
             ))}
           </div>

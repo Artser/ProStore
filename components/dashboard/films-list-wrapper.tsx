@@ -10,6 +10,7 @@ interface FilmsListWrapperProps {
   page?: number
   totalPages?: number
   total?: number
+  sort?: 'popular' | 'recent'
 }
 
 /**
