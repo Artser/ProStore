@@ -121,3 +121,5 @@ https://prostore.vercel.app/api/auth/callback/google/  ❌ (не добавля�
 https://prostore.vercel.app/auth/callback/google  ❌ (неправильный путь)
 ```
 
+
+

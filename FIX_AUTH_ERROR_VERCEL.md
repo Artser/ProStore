@@ -194,3 +194,5 @@ openssl rand -base64 32
 3. Сравните `.env` локально с переменными на Vercel
 4. Убедитесь, что Google OAuth настроен правильно (см. `AUTH_SETUP.md`)
 
+
+
