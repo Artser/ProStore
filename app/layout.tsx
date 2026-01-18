@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Header } from '@/components/layout/header'
+import { Footer } from '@/components/layout/footer'
 
 export const metadata: Metadata = {
-  title: 'ProStore - Next.js + Prisma + Neon',
-  description: 'Минимальный проект на Next.js с Prisma и NeonDB',
+  title: 'FilmStore - Каталог фильмов',
+  description: 'Просматривайте и делитесь своими любимыми фильмами',
 }
 
 export default function RootLayout({
@@ -13,10 +15,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ru">
-      <body>{children}</body>
+      <body className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
+      </body>
     </html>
   )
 }
+
+
 
 
 
