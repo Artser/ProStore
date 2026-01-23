@@ -1,101 +1,85 @@
-import { PrismaClient, Visibility } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Начинаем seeding...')
+  console.log('Начало заполнения базы данных...');
 
-  // Очищаем существующие данные (в правильном порядке из-за foreign keys)
-  await prisma.vote.deleteMany()
-  await prisma.filmTag.deleteMany()
-  await prisma.film.deleteMany()
-  await prisma.note.deleteMany()
-  await prisma.tag.deleteMany()
-  await prisma.category.deleteMany()
-  await prisma.user.deleteMany()
-
-  // Создаем тестового пользователя
-  const user = await prisma.user.create({
-    data: {
+  // Создаем пользователя
+  const user = await prisma.user.upsert({
+    where: { email: 'test@example.com' },
+    update: {},
+    create: {
       email: 'test@example.com',
       name: 'Тестовый пользователь',
     },
-  })
-  console.log(`Создан пользователь: ${user.email}`)
+  });
+
+  console.log('Пользователь создан:', user);
 
   // Создаем категорию
-  const category = await prisma.category.create({
-    data: {
-      category: 'Тестовая категория',
+  const category = await prisma.category.upsert({
+    where: { category: 'Общее' },
+    update: {},
+    create: {
+      category: 'Общее',
     },
-  })
-  console.log(`Создана категория: ${category.category}`)
+  });
 
-  // Создаем тестовый фильм (Film)
-  const film = await prisma.film.create({
-    data: {
-      title: 'Тестовый фильм',
-      content: 'Это содержимое тестового фильма для проверки работы системы.',
-      description: 'Описание тестового фильма',
-      ownerId: user.id,
-      categoryId: category.id,
-      visibility: Visibility.PUBLIC,
-      publishedAt: new Date(),
-    },
-  })
-  console.log(`Создан фильм: ${film.title}`)
+  console.log('Категория создана:', category);
 
-  // Создаем тег
-  const tag = await prisma.tag.create({
-    data: {
-      name: 'тестовый',
-    },
-  })
-  console.log(`Создан тег: ${tag.name}`)
-
-  // Связываем фильм с тегом
-  await prisma.filmTag.create({
-    data: {
-      filmId: film.id,
-      tagId: tag.id,
-    },
-  })
-  console.log('Фильм связан с тегом')
-
-  // Создаем голос (Vote) от пользователя за фильм
-  const vote = await prisma.vote.create({
-    data: {
-      userId: user.id,
-      promptId: film.id,
-      value: 1,
-    },
-  })
-  console.log(`Создан голос: значение ${vote.value}`)
-
-  // Создаем заметку для пользователя
+  // Создаем заметку
   const note = await prisma.note.create({
     data: {
+      title: 'Первая заметка',
       ownerId: user.id,
-      title: 'Тестовая заметка',
     },
-  })
-  console.log(`Создана заметка: ${note.title}`)
+  });
 
-  console.log('\n✅ Seeding завершен успешно!')
-  console.log(`\nСоздано:`)
-  console.log(`- Пользователей: 1`)
-  console.log(`- Фильмов: 1`)
-  console.log(`- Голосов: 1`)
-  console.log(`- Заметок: 1`)
-  console.log(`- Категорий: 1`)
-  console.log(`- Тегов: 1`)
+  console.log('Заметка создана:', note);
+
+  // Создаем тег
+  const tag = await prisma.tag.upsert({
+    where: { name: 'тестовый' },
+    update: {},
+    create: {
+      name: 'тестовый',
+    },
+  });
+
+  console.log('Тег создан:', tag);
+
+  // Создаем фильм (промт)
+  const film = await prisma.film.create({
+    data: {
+      title: 'Пример промта',
+      content: 'Это пример содержимого промта',
+      description: 'Описание промта',
+      ownerId: user.id,
+      categoryId: category.id,
+      visibility: 'PUBLIC',
+      tags: {
+        create: {
+          tagId: tag.id,
+        },
+      },
+    },
+  });
+
+  console.log('Фильм создан:', film);
+
+  console.log('База данных успешно заполнена!');
 }
 
 main()
   .catch((e) => {
-    console.error('Ошибка при seeding:', e)
-    process.exit(1)
+    console.error('Ошибка при заполнении базы данных:', e);
+    process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await prisma.$disconnect();
+  });
+
+
+
+

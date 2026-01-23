@@ -1,66 +1,53 @@
-import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
+import bcrypt from 'bcryptjs';
+import { prisma } from './prisma';
 
-/**
- * Вспомогательные функции для работы с аутентификацией
- */
-
-/**
- * Получает текущую сессию пользователя
- * Если пользователь не авторизован - редирект на /login
- * @returns Объект сессии с гарантированным userId
- */
-export async function getRequiredSession() {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    redirect('/login')
-  }
-
-  return session
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, 10);
 }
 
-/**
- * Получает userId текущего пользователя
- * Если пользователь не авторизован - редирект на /login
- * @returns userId пользователя
- */
-export async function getRequiredUserId(): Promise<string> {
-  const session = await getRequiredSession()
-  return session.user.id
+export async function verifyPassword(
+  password: string,
+  hashedPassword: string
+): Promise<boolean> {
+  return bcrypt.compare(password, hashedPassword);
 }
 
-/**
- * Проверяет, является ли пользователь владельцем ресурса
- * @param resourceOwnerId ID владельца ресурса
- * @param userId ID текущего пользователя
- * @returns true, если пользователь является владельцем
- */
-export function isOwner(resourceOwnerId: string, userId: string): boolean {
-  return resourceOwnerId === userId
-}
-
-/**
- * Проверяет доступ к приватному ресурсу
- * @param resourceOwnerId ID владельца ресурса
- * @param userId ID текущего пользователя
- * @throws Редирект на /login, если пользователь не авторизован
- * @throws Редирект на /dashboard, если доступ запрещён
- */
-export async function checkPrivateResourceAccess(
-  resourceOwnerId: string,
-  userId?: string
+export async function createUserWithPassword(
+  email: string,
+  password: string,
+  name?: string
 ) {
-  if (!userId) {
-    redirect('/login')
-  }
-
-  if (!isOwner(resourceOwnerId, userId)) {
-    redirect('/dashboard')
-  }
+  const hashedPassword = await hashPassword(password);
+  
+  return prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+      name,
+    },
+  });
 }
 
+export async function verifyUserCredentials(
+  email: string,
+  password: string
+) {
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
 
+  if (!user || !user.password) {
+    return null;
+  }
+
+  const isValid = await verifyPassword(password, user.password);
+  
+  if (!isValid) {
+    return null;
+  }
+
+  return user;
+}
 
 
 

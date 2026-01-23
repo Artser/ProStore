@@ -1,36 +1,35 @@
-import Link from 'next/link'
+import Link from 'next/link';
 
-/**
- * Footer компонент для всех страниц
- * Отображает копирайт и ссылки на политику и контакты
- */
 export function Footer() {
-  const currentYear = new Date().getFullYear()
+  const currentYear = new Date().getFullYear();
 
   return (
     <footer className="border-t bg-background">
-      <div className="container px-4 py-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
+      <div className="container flex flex-col items-center justify-between gap-4 py-6 md:h-16 md:flex-row md:py-0">
+        <div className="flex flex-col items-center gap-4 px-8 md:flex-row md:gap-2 md:px-0">
+          <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             © {currentYear} FilmStore. Все права защищены.
           </p>
-          <nav className="flex items-center gap-6">
-            <Link
-              href="/policy"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              Политика
-            </Link>
-            <Link
-              href="/contacts"
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              Контакты
-            </Link>
-          </nav>
+        </div>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/policy"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
+            Политика
+          </Link>
+          <Link
+            href="/contacts"
+            className="text-sm font-medium transition-colors hover:text-primary"
+          >
+            Контакты
+          </Link>
         </div>
       </div>
     </footer>
-  )
+  );
 }
+
+
+
 

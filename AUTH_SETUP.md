@@ -139,12 +139,12 @@ export default async function FilmPage({ params }: { params: { id: string } }) {
     notFound()
   }
   
-  // Проверка доступа к приватному фильму
+  // Проверка доступа к приватному промту
   if (film.visibility === 'PRIVATE') {
     await checkPrivateResourceAccess(film.ownerId, session?.user?.id)
   }
   
-  // Показываем фильм
+  // Показываем промт
 }
 ```
 

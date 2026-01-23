@@ -1,83 +1,23 @@
-import { auth } from '@/auth'
-import { prisma } from '@/lib/prisma'
-import { Button } from '@/components/ui/button'
-import { FilmCardPublic } from '@/components/film-card-public'
-import Link from 'next/link'
-import { Plus, TrendingUp, Clock } from 'lucide-react'
+import { prisma } from '@/lib/prisma';
+import { getSession } from '@/lib/auth';
+import { FilmCard } from '@/components/film-card';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 
-/**
- * Главная страница FilmStore
- * Показывает Hero-блок и два раздела: "Новые" и "Популярные" фильмы
- */
-export default async function HomePage() {
-  const session = await auth()
-  const userId = session?.user?.id || null
-
-  // Количество фильмов для каждого раздела
-  const recentFilmsLimit = 12
-  const popularFilmsLimit = 12
-
-  // Получаем новые фильмы (сортировка по createdAt desc)
-  const recentFilms = await prisma.film.findMany({
+async function getRecentFilms() {
+  return await prisma.film.findMany({
     where: {
-      isPublic: true,
-    },
-    include: {
-      owner: {
-        select: {
-          id: true,
-          name: true,
-        },
-      },
-      _count: {
-        select: {
-          likes: true,
-        },
-      },
-      tags: {
-        include: {
-          tag: {
-            select: {
-              name: true,
-            },
-          },
-        },
-      },
-      ...(userId
-        ? {
-            likes: {
-              where: {
-                userId,
-              },
-              select: {
-                id: true,
-              },
-            },
-          }
-        : {}),
+      visibility: 'PUBLIC',
     },
     orderBy: {
       createdAt: 'desc',
     },
-    take: recentFilmsLimit,
-  })
-
-  // Получаем все публичные фильмы для сортировки по популярности
-  // (нужно получить достаточно данных для корректной сортировки)
-  const allPublicFilms = await prisma.film.findMany({
-    where: {
-      isPublic: true,
-    },
+    take: 20,
     include: {
       owner: {
         select: {
-          id: true,
           name: true,
-        },
-      },
-      _count: {
-        select: {
-          likes: true,
         },
       },
       tags: {
@@ -89,146 +29,182 @@ export default async function HomePage() {
           },
         },
       },
-      ...(userId
-        ? {
-            likes: {
-              where: {
-                userId,
-              },
-              select: {
-                id: true,
-              },
-            },
-          }
-        : {}),
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
     },
-  })
+  });
+}
 
-  // Сортируем по популярности (количество лайков)
-  const popularFilms = allPublicFilms
-    .sort((a, b) => {
-      const likesA = a._count?.likes || 0
-      const likesB = b._count?.likes || 0
-      if (likesB !== likesA) {
-        return likesB - likesA
-      }
-      // Если лайков одинаково - сортируем по дате
-      return (
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-    })
-    .slice(0, popularFilmsLimit)
+async function getPopularFilms() {
+  const films = await prisma.film.findMany({
+    where: {
+      visibility: 'PUBLIC',
+    },
+    include: {
+      owner: {
+        select: {
+          name: true,
+        },
+      },
+      tags: {
+        include: {
+          tag: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          votes: true,
+        },
+      },
+    },
+  });
 
-  // Преобразуем данные для компонента FilmCardPublic
-  const transformFilm = (film: any) => ({
-    id: film.id,
-    title: film.title,
-    content: film.content,
-    description: film.description,
-    createdAt: film.createdAt,
-    likesCount: film._count?.likes || 0,
-    likedByMe: userId ? (film.likes?.length > 0 || false) : undefined,
-    owner: film.owner,
-    tags: film.tags,
-  })
+  // Сортируем по количеству лайков
+  return films
+    .sort((a, b) => b._count.votes - a._count.votes)
+    .slice(0, 20);
+}
 
-  const recentFilmsData = recentFilms.map(transformFilm)
-  const popularFilmsData = popularFilms.map(transformFilm)
+async function getLikedFilmIds(userId: string, filmIds: string[]) {
+  if (filmIds.length === 0) return new Set<string>();
+  
+  const votes = await prisma.vote.findMany({
+    where: {
+      userId,
+      promptId: {
+        in: filmIds,
+      },
+    },
+    select: {
+      promptId: true,
+    },
+  });
+
+  return new Set(votes.map((v) => v.promptId));
+}
+
+export default async function HomePage() {
+  const session = await getSession();
+  const [recentFilms, popularFilms] = await Promise.all([
+    getRecentFilms(),
+    getPopularFilms(),
+  ]);
+
+  // Получаем список лайкнутых фильмов для авторизованного пользователя
+  let likedFilmIds = new Set<string>();
+  if (session?.user?.id) {
+    const allFilmIds = [
+      ...recentFilms.map((f) => f.id),
+      ...popularFilms.map((f) => f.id),
+    ];
+    likedFilmIds = await getLikedFilmIds(session.user.id, allFilmIds);
+  }
+
+  const enrichFilms = (films: typeof recentFilms) => {
+    return films.map((film) => ({
+      ...film,
+      likedByMe: session?.user?.id ? likedFilmIds.has(film.id) : false,
+    }));
+  };
+
+  const enrichedRecentFilms = enrichFilms(recentFilms);
+  const enrichedPopularFilms = enrichFilms(popularFilms);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero-блок */}
-      <section className="border-b bg-gradient-to-b from-background to-muted/20 py-16 md:py-24">
-        <div className="container px-4 mx-auto">
-          <div className="flex flex-col items-center text-center gap-6 max-w-3xl mx-auto">
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight">
+    <div className="flex min-h-screen flex-col">
+      {/* Hero Section */}
+      <section className="border-b bg-gradient-to-b from-background to-muted/20 py-12 md:py-24">
+        <div className="container px-4">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="text-4xl font-bold tracking-tight md:text-6xl">
               Добро пожаловать в FilmStore
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl">
-              Откройте для себя коллекцию удивительных фильмов. Изучайте, делитесь
-              и находите новые любимые истории от сообщества.
+            <p className="mt-4 text-lg text-muted-foreground md:text-xl">
+              Откройте для себя коллекцию лучших промптов и фильмов от
+              сообщества
             </p>
-            {session?.user ? (
-              <Button asChild size="lg" className="gap-2">
-                <Link href="/dashboard">
-                  <Plus className="h-5 w-5" />
-                  Добавить фильм
-                </Link>
-              </Button>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Button asChild size="lg" className="gap-2">
-                  <Link href="/login">
-                    <Plus className="h-5 w-5" />
-                    Добавить фильм
-                  </Link>
+            <div className="mt-8">
+              {session ? (
+                <Button asChild size="lg">
+                  <Link href="/my-prompts/new">Добавить фильм</Link>
                 </Button>
-                <p className="text-sm text-muted-foreground">
-                  Войдите, чтобы добавлять фильмы
-                </p>
-              </div>
-            )}
+              ) : (
+                <div className="flex flex-col items-center gap-2">
+                  <Button asChild size="lg">
+                    <Link href="/login">Добавить фильм</Link>
+                  </Button>
+                  <p className="text-sm text-muted-foreground">
+                    Войдите, чтобы добавлять фильмы
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Раздел "Новые фильмы" */}
-      <section className="py-12 md:py-16">
-        <div className="container px-4 mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <Clock className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl md:text-3xl font-bold">Новые</h2>
-            </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/public?sort=recent">
-                Смотреть все
-              </Link>
-            </Button>
-          </div>
-
-          {recentFilmsData.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Пока нет новых фильмов</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentFilmsData.map((film) => (
-                <FilmCardPublic key={film.id} film={film} userId={userId} />
-              ))}
-            </div>
-          )}
+      {/* Recent Films Section */}
+      <section className="container py-12 px-4">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight">Новые</h2>
+          <p className="mt-2 text-muted-foreground">
+            Последние добавленные публичные фильмы
+          </p>
         </div>
+        {enrichedRecentFilms.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {enrichedRecentFilms.map((film) => (
+              <FilmCard
+                key={film.id}
+                film={film}
+                showLikeButton={!!session}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-12 text-center">
+            <p className="text-muted-foreground">
+              Пока нет публичных фильмов
+            </p>
+          </div>
+        )}
       </section>
 
-      {/* Раздел "Популярные фильмы" */}
-      <section className="py-12 md:py-16 bg-muted/30">
-        <div className="container px-4 mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-6 w-6 text-primary" />
-              <h2 className="text-2xl md:text-3xl font-bold">Популярные</h2>
-            </div>
-            <Button asChild variant="outline" size="sm">
-              <Link href="/dashboard/public?sort=popular">
-                Смотреть все
-              </Link>
-            </Button>
-          </div>
+      <Separator />
 
-          {popularFilmsData.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>Пока нет популярных фильмов</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {popularFilmsData.map((film) => (
-                <FilmCardPublic key={film.id} film={film} userId={userId} />
-              ))}
-            </div>
-          )}
+      {/* Popular Films Section */}
+      <section className="container py-12 px-4">
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold tracking-tight">Популярные</h2>
+          <p className="mt-2 text-muted-foreground">
+            Самые популярные фильмы по количеству лайков
+          </p>
         </div>
+        {enrichedPopularFilms.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {enrichedPopularFilms.map((film) => (
+              <FilmCard
+                key={film.id}
+                film={film}
+                showLikeButton={!!session}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-12 text-center">
+            <p className="text-muted-foreground">
+              Пока нет популярных фильмов
+            </p>
+          </div>
+        )}
       </section>
     </div>
-  )
+  );
 }

@@ -10,71 +10,30 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  emailVerified DateTime?
-  name          String?
-  image         String?
-  createdAt     DateTime  @default(now())
+enum Visibility {
+  PRIVATE
+  PUBLIC
+}
 
-  notes    Note[]
-  films    Film[]
-  votes    Vote[]
-  likes    Like[]
-  accounts Account[]
-  sessions Session[]
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String?  // Для входа по email/password (опционально, т.к. могут быть OAuth пользователи)
+  createdAt DateTime @default(now())
+  notes     Note[]
+  films     Film[]
+  votes     Vote[]
 
   @@map("users")
 }
 
-// Модели для Auth.js (NextAuth)
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-  @@map("accounts")
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("sessions")
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-  @@map("verification_tokens")
-}
-
 model Note {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   ownerId   String
   title     String
   createdAt DateTime @default(now())
-
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   @@index([ownerId])
   @@map("notes")
@@ -83,45 +42,37 @@ model Note {
 model Category {
   id       String @id @default(cuid())
   category String @unique
-
-  films Film[]
+  films    Film[]
 
   @@map("categories")
 }
 
 model Film {
-  id          String     @id @default(cuid())
+  id          String      @id @default(cuid())
   ownerId     String
   title       String
   content     String
   description String?
   categoryId  String
-  visibility  Visibility @default(PRIVATE)
-  isPublic    Boolean    @default(false) // Публичность (дополнительно к visibility для простоты)
-  isFavorite  Boolean    @default(false) // Избранное
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  visibility  Visibility  @default(PRIVATE)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   publishedAt DateTime?
-
-  owner    User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  category Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  votes    Vote[]
-  likes    Like[]
-  tags     FilmTag[]
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  category    Category    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags        FilmTag[]
+  votes       Vote[]
 
   @@index([ownerId, updatedAt])
   @@index([visibility, createdAt])
-  @@index([isPublic, createdAt])
-  @@index([ownerId, isFavorite])
   @@map("films")
 }
 
 model Tag {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-
-  films FilmTag[]
+  id        String    @id @default(cuid())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  films     FilmTag[]
 
   @@map("tags")
 }
@@ -129,9 +80,8 @@ model Tag {
 model FilmTag {
   filmId String
   tagId  String
-
-  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
-  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  film   Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
+  tag    Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@id([filmId, tagId])
   @@map("film_tags")
@@ -143,9 +93,8 @@ model Vote {
   promptId  String
   value     Int      @default(1)
   createdAt DateTime @default(now())
-
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  prompt Film @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  prompt    Film     @relation(fields: [promptId], references: [id], onDelete: Cascade)
 
   @@unique([userId, promptId])
   @@index([promptId])
@@ -153,22 +102,3 @@ model Vote {
   @@map("votes")
 }
 
-model Like {
-  id        String   @id @default(cuid())
-  userId    String
-  filmId    String
-  createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  film Film @relation(fields: [filmId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, filmId])
-  @@index([filmId])
-  @@index([userId])
-  @@map("likes")
-}
-
-enum Visibility {
-  PRIVATE
-  PUBLIC
-}
